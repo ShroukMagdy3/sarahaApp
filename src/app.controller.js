@@ -37,7 +37,7 @@ const bootstrap = (app, express) => {
   app.use(express.json());
   app.use("/uploads", express.static("uploads"));
   checkConnection();
-  app.use("/" , (req, res, next)=>{
+  app.get("/" , (req, res, next)=>{
     res.status(200).json({message:"welcome to my app..."})
   })
   app.use("/users", userRouter);
