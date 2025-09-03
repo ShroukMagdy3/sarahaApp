@@ -28,7 +28,6 @@ userRouter.post(
   UC.updateProfileImage
 );
 userRouter.post("/loginWithGmail", UC.loginWithGmail);
-
 userRouter.post("/logout", authentication, UC.logOut);
 userRouter.post("/refreshToken", UC.refreshToken);
 userRouter.post(
@@ -37,19 +36,7 @@ userRouter.post(
   authentication,
   UC.updatePass
 );
-
-
-
 userRouter.post("/confirmEmail", UC.confirmEmail);
-
-
-
-
-
-
-
-
-
 userRouter.get(
   "/getUser",
   validation(UV.getUserSchema),

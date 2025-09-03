@@ -15,11 +15,8 @@ import codeModel from "../../DB/models/code.model.js";
 import { OAuth2Client } from "google-auth-library";
 import cloudinary from "../../utilities/cloudinary/index.js";
 
-// ===========================signUp================================
 export const signUp = async (req, res, next) => {
-  // get data from body
   const { name, email, phone, password, cPassword, gender } = req.body;
-  // check email
   const user = await userModel.findOne({ email });
   if (user) {
     throw new Error("this user already exist", { cause: 409 });
@@ -33,12 +30,9 @@ export const signUp = async (req, res, next) => {
       folder: "sarahaApp/users/image",
     }
   );
-  // hash pass
   const hash = await Hash(password, process.env.SALT_ROUNDS);
   const hashCPass = await Hash(cPassword, process.env.SALT_ROUNDS);
-  // encrypt phone
   const encryptPhone = await encrypt(phone, process.env.ENCRYPT_PHONE);
-  // create
   const userCreated = await userModel.create({
     name,
     email,
@@ -48,15 +42,11 @@ export const signUp = async (req, res, next) => {
     gender,
     image: { public_id, secure_url },
   });
-
-  // confirm Mail
   eventEmitter.emit("sendEmail", { email, id: userCreated._id });
-
   await userCreated.save();
   return res.status(201).json({ message: "success created !!", userCreated });
 };
 
-// ==================confirm EMAil=====================
 export const confirmEmail = async (req, res, next) => {
   const { code, email } = req.body;
   if (!code || !email) {
@@ -121,7 +111,6 @@ export const confirmEmail = async (req, res, next) => {
   await user.save();
   return res.status(200).json({ message: "confirmed Done" });
 };
-//===========================signIN=========================
 export const signIn = async (req, res, next) => {
   const { email, password } = req.body;
   const user = await userModel.findOne({ email, confirmed: true });
@@ -173,7 +162,6 @@ export const signIn = async (req, res, next) => {
   // done
   return res.status(200).json({ message: "Done", access_token, refresh_token });
 };
-// =============================loginWithGmail==============
 export const loginWithGmail = async (req, res, next) => {
   const { idToken } = req.body;
   const client = new OAuth2Client();
@@ -225,14 +213,12 @@ export const loginWithGmail = async (req, res, next) => {
     .json({ message: "created", access_token, refresh_token });
 };
 
-//=======================get_user =============================
 export const getUser = async (req, res, next) => {
   let phone = await decrypt(req.user.phone, process.env.ENCRYPT_PHONE);
   req.user.phone = phone;
   return res.status(200).json({ message: "Done", user: req.user });
 };
 
-// =========================logout===============================
 export const logOut = async (req, res, next) => {
   const revoke = await revokeModel.create({
     token: req.decode.jti,
@@ -241,7 +227,6 @@ export const logOut = async (req, res, next) => {
   return res.status(200).json({ message: "logged OUT!" });
 };
 
-// =====================refreshToken==================
 export const refreshToken = async (req, res, next) => {
   const { authorization } = req.headers;
   const [prefix, token] = authorization.split(" ") || [];
@@ -288,8 +273,6 @@ export const refreshToken = async (req, res, next) => {
   });
   return res.status(200).json({ message: "Done", access_token, refresh_token });
 };
-
-// =====================updatePass=================
 export const updatePass = async (req, res, next) => {
   const { oldPass, newPass } = req.body;
   if (!(await compare(oldPass, req.user.password))) {
@@ -300,8 +283,6 @@ export const updatePass = async (req, res, next) => {
   await req.user.save();
   return res.status(200).json({ message: "done", user: req.user });
 };
-
-// =====================forgetPass=================
 export const forgetPass = async (req, res, next) => {
   const { email } = req.body;
   const user = await userModel.findOne({ email: email });
@@ -315,8 +296,6 @@ export const forgetPass = async (req, res, next) => {
   await user.save();
   return res.status(200).json({ message: "sent OTP" });
 };
-
-// ====================resetPass=========================
 export const resetPass = async (req, res, next) => {
   const { email, otp, newPass } = req.body;
   const user = await userModel.findOne({
@@ -338,8 +317,6 @@ export const resetPass = async (req, res, next) => {
 
   return res.status(200).json({ message: "Done" });
 };
-
-// ====================updateProfile=================
 export const updateProfile = async (req, res, next) => {
   const { name, email, phone, gender, age } = req.body;
   if (name) {
@@ -365,8 +342,6 @@ export const updateProfile = async (req, res, next) => {
   await req.user.save();
   return res.status(200).json({ message: "Done" });
 };
-
-// ===================getProfileData=================
 export const getProfileData = async (req, res, next) => {
   const { id } = req.params;
   const user = await userModel.findById(id);
@@ -375,8 +350,6 @@ export const getProfileData = async (req, res, next) => {
   }
   return res.status(200).json({ message: "done", user });
 };
-// ===================deleteUser=================
-// ==============hard delete======================
 export const deleteUser = async (req, res, next) => {
   const { id } = req.params;
 
@@ -394,7 +367,6 @@ export const deleteUser = async (req, res, next) => {
   return res.status(200).json({ message: "deleted", user });
 };
 
-//======================== freeze================
 export const freeze = async (req, res, next) => {
   const { id } = req.params;
   if (id && req.user.role !== roles.admin) {
@@ -412,7 +384,6 @@ export const freeze = async (req, res, next) => {
   }
 };
 
-//======================== Unfreeze================
 export const unFreeze = async (req, res, next) => {
   const { id } = req.params;
   if (id && req.user.role !== roles.admin) {
@@ -432,7 +403,6 @@ export const unFreeze = async (req, res, next) => {
   }
 };
 
-// ====================updateProfileImage=================
 export const updateProfileImage = async (req, res, next) => {
   const { public_id, secure_url } = await cloudinary.uploader.upload(
     req.file.path,
